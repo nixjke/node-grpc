@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@grpc/grpc-js": "^1.6.7",
+    "@grpc/proto-loader": "^0.6.13",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.4"
+  }
+}
