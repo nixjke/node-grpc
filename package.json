@@ -1,7 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "proto:gen": "./proto-gen.sh",
+    "start": "ts-node server",
+    "client": "ts-node client"
   },
   "devDependencies": {
     "@grpc/grpc-js": "^1.6.7",
