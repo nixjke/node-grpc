@@ -1,8 +1,12 @@
-import path from 'path'
 import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
+import path from 'path'
 import { ProtoGrpcType } from './proto/random'
+import { ChatRequest } from './proto/randomPackage/ChatRequest'
+import { ChatResponse } from './proto/randomPackage/ChatResponse'
 import { RandomHandlers } from './proto/randomPackage/Random'
+import { TodoRequest } from './proto/randomPackage/TodoRequest'
+import { TodoResponse } from './proto/randomPackage/TodoResponse'
 
 const PORT = 8082
 const PROTO_FILE = './proto/random.proto'
@@ -21,13 +25,73 @@ function main() {
   })
 }
 
+const todoList: TodoResponse = { todos: [] }
+
+const callObjByUsername = new Map<string, grpc.ServerDuplexStream<ChatRequest, ChatResponse>>()
+
 function getServer() {
   const server = new grpc.Server()
   server.addService(randomPackage.Random.service, {
     PingPong: (req, res) => {
       req.request
       console.log(req.request)
-      res(null, {message: 'Pong'})
+      res(null, { message: 'Pong' })
+    },
+
+    RandomNumbers: call => {
+      const { maxVal = 10 } = call.request
+      console.log(maxVal)
+
+      let runCount = 0
+      const id = setInterval(() => {
+        runCount = ++runCount
+        call.write({ num: Math.floor(Math.random() * maxVal) })
+
+        if (runCount >= 10) {
+          clearInterval(id)
+          call.end()
+        }
+      }, 500)
+    },
+
+    TodoList: (call, callback) => {
+      call.on('data', (chunk: TodoRequest) => {
+        todoList.todos?.push(chunk)
+        console.log(chunk)
+      })
+      call.on('end', () => callback(null, { todos: todoList.todos }))
+    },
+
+    Chat: call => {
+      call.on('data', req => {
+        const username = call.metadata.get('username')[0] as string
+        const msg = req.message
+        console.log(req)
+        for (let [user, userCall] of callObjByUsername) {
+          if (username !== user) {
+            userCall.write({
+              username: username,
+              message: msg,
+            })
+          }
+        }
+
+        if (callObjByUsername.get(username) === undefined) {
+          callObjByUsername.set(username, call)
+        }
+      })
+
+      call.on('end', () => {
+        const username = call.metadata.get('username')[0] as string
+        callObjByUsername.delete(username)
+        console.log(`${username} is ending their chat session`)
+        call.write({
+          username: 'Server',
+          message: `See you later ${username}`,
+        })
+
+        call.end()
+      })
     },
   } as RandomHandlers)
 
