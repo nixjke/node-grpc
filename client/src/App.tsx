@@ -8,7 +8,7 @@ import { ChatServiceClient } from './proto/RandomServiceClientPb'
 function App() {
   React.useEffect(() => {
     ;(async () => {
-      const client = new ChatServiceClient('http://localhost:8082')
+      const client = new ChatServiceClient('http://localhost:8080')
       const req = new InitiateRequest()
       req.setName('Sage')
       req.setAvatarUrl('avatar url')

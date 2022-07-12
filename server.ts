@@ -4,7 +4,7 @@ import path from 'path'
 import { ProtoGrpcType } from './proto/random'
 import { ChatServiceHandlers } from './proto/randomPackage/ChatService'
 
-const PORT = 8082
+const PORT = 9090
 const PROTO_FILE = './proto/random.proto'
 
 const packageDef = protoLoader.loadSync(path.resolve(__dirname, PROTO_FILE))
