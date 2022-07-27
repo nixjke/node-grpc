@@ -15,9 +15,8 @@ function App() {
 
       const respone = await client.chatInitiate(req, {}, function(err, response) {
         if (err) return console.error(err)
-        console.log(response)
+        console.log(response.toObject())
       })
-
       console.log(respone)
     })()
   }, [])

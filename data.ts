@@ -37,3 +37,23 @@ export const updateUser = (user: User, fn: ErrCB<unknown>) => {
     client.lset(REDIST_KEYS.users, i, JSON.stringify(user), fn)
   })
 }
+
+export const getUser = (id: number, fn: ErrCB<User>) => {
+  listUsers((err, users) => {
+    if (err) return fn(err, {})
+
+    const idx = users.findIndex(u => u.id === id)
+    if (idx === -1) return fn(new Error('User with id now found'), {})
+    return fn(null, users[idx])
+  })
+}
+
+export type Message = {
+  userId: number
+  message: string
+  avatar: string
+}
+
+export const addMessageToRoom = (msg: Message, fn: ErrCB<number>) => {
+  client.rpush(REDIST_KEYS.broadcastRoom, JSON.stringify(msg), fn)
+}
