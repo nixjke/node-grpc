@@ -37,8 +37,8 @@ enum Status {
 message User {
   int32 id = 1;
   string name = 2;
-  string status = 3;
-  string avatar_url = 4;
+  Status status = 3;
+  string avatar = 4;
 }
 
 message UserStreamResponse {
