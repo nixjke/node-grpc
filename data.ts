@@ -28,3 +28,12 @@ export const listUsers = (fn: ErrCB<Array<User>>) => {
     fn(err, users)
   })
 }
+
+export const updateUser = (user: User, fn: ErrCB<unknown>) => {
+  listUsers((err, users) => {
+    if (err) return fn(err, null)
+    const i = users.findIndex(u => u.id === user.id)
+    if (i === -1) return fn(new Error('User was not found'), null)
+    client.lset(REDIST_KEYS.users, i, JSON.stringify(user), fn)
+  })
+}
