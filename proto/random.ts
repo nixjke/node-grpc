@@ -14,6 +14,7 @@ export interface ProtoGrpcType {
     }
   }
   randomPackage: {
+    Random: any;
     ChatService: SubtypeConstructor<typeof grpc.Client, _randomPackage_ChatServiceClient> & { service: _randomPackage_ChatServiceDefinition }
     InitiateRequest: MessageTypeDefinition
     InitiateResponse: MessageTypeDefinition

@@ -2,10 +2,13 @@ import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 import path from 'path'
 import { ProtoGrpcType } from './proto/random'
-import { listUsers, addUser, updateUser, getUser, Message, addMessageToRoom } from './data'
+import { listUsers, addUser, updateUser, getUser, addMessageToRoom, listMessagesInRoom } from './data'
 import { User } from './proto/randomPackage/User'
 import { Status } from './proto/randomPackage/Status'
 import { ChatServiceHandlers } from './proto/randomPackage/ChatService'
+import { StreamMessage } from './proto/randomPackage/StreamMessage'
+import { StreamRequest, StreamRequest__Output } from './proto/randomPackage/StreamRequest'
+import { UserStreamResponse } from './proto/randomPackage/UserStreamResponse'
 
 const PORT = 9090
 const PROTO_FILE = './proto/random.proto'
@@ -24,7 +27,8 @@ function main() {
   })
 }
 
-// const callObjByUsername = new Map<string, grpc.ServerDuplexStream<ChatRequest, ChatResponse>>()
+const callObjByUserId = new Map<number, grpc.ServerWritableStream<StreamRequest__Output, StreamMessage>>()
+const messageStreamByUserId = new Map<number, grpc.ServerWritableStream<StreamRequest__Output, StreamMessage>>()
 
 function getServer() {
   const server = new grpc.Server()
@@ -71,10 +75,10 @@ function getServer() {
 
       getUser(id, (err, user) => {
         if (err) return callback(err)
-        const msg: Message = {
+        const msg: StreamMessage = {
           userId: user.id!,
           message: message,
-          avatar: user.avatar!,
+          userAvatar: user.avatar!,
         }
         addMessageToRoom(msg, err => callback(err))
       })
@@ -85,6 +89,32 @@ function getServer() {
       if (!id) return call.end()
       getUser(id, (err, user) => {
         if (err) return call.end()
+        listMessagesInRoom((err, msgs) => {
+          if (err) call.end()
+          for (const msg of msgs) {
+            call.write(msg)
+          }
+          messageStreamByUserId.set(user.id!, call)
+        })
+        call.on('cancelled', () => {
+          user.status = Status.OFFLINE
+          updateUser(user, err => {
+            if (err) console.error(err)
+            messageStreamByUserId.set(user.id!, call)
+          })
+        })
+      })
+    },
+    UserStream: call => {
+      const { id = -1 } = call.request
+      if (!id) return call.end()
+      getUser(id, (err, user) => {
+        if (err) return call.end()
+        listUsers((err, users) => {
+          if (err) call.end()
+          call.write({ users: users })
+          messageStreamByUserId.set(user.id!, call)
+        })
       })
     },
   } as ChatServiceHandlers)
