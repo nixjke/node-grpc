@@ -619,3 +619,17 @@ $5
 users
 $58
 {"id":7407,"status":1,"name":"Sage","avatar":"avatar url"}
+*3
+$5
+rpush
+$5
+users
+$58
+{"id":1025,"status":1,"name":"Sage","avatar":"avatar url"}
+*3
+$5
+rpush
+$5
+users
+$57
+{"id":665,"status":1,"name":"Sage","avatar":"avatar url"}

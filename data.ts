@@ -57,3 +57,15 @@ export type Message = {
 export const addMessageToRoom = (msg: Message, fn: ErrCB<number>) => {
   client.rpush(REDIST_KEYS.broadcastRoom, JSON.stringify(msg), fn)
 }
+
+export const listMessagesInRoom = (fn: ErrCB<Array<Message>>) => {
+  client.lrange(REDIST_KEYS.broadcastRoom, 0, -1, (err, rows) => {
+    if (err) return fn(err, [])
+    const msgs: Array<Message> = []
+    for (const row of rows) {
+      const msg = JSON.parse(row) as Message
+      msgs.push(msg)
+    }
+    return fn(null, msgs)
+  })
+}
